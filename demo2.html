@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8">
+        <title>Tweet Sentiment over Time</title>
+
+        <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/d3/3.5.6/d3.min.js"></script>
+        <style type="text/css">
+
+        </style>
+    </head>
+    <body>
+
+
+
+        <div id="title">
+            <h1>
+                Tampa Bay Data Science User Group
+            </h1>
+            <h2>Tweet Sentiment</h2>
+        </div>
+        <div id="chart"></div>
+
+        <script type="text/javascript" >
+            
+            var margin = {
+        top: 10,
+        right: 10,
+        bottom: 20,
+        left: 30
+    },
+    width = 920 - margin.left - margin.right,
+    height = 400 - margin.top - margin.bottom;
+
+var y = d3.scale.linear()
+    .range([height, 0]);
+
+var x = d3.scale.ordinal()
+    .rangeRoundBands([0, width], .2);
+
+
+var xAxisScale = d3.scale.linear()
+    .domain([0, 50])
+    .range([ 0, width]);
+
+var xAxis = d3.svg.axis()
+    .scale(xAxisScale)
+    .orient("bottom")
+    .tickFormat(d3.format("d"));
+
+var yAxis = d3.svg.axis()
+    .scale(y)
+    .orient("left");
+
+var svg = d3.select("#chart").append("svg")
+    .attr("width", width + margin.left + margin.right)
+    .attr("height", height + margin.top + margin.bottom)
+    .append("g")
+    .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+
+d3.csv("tweet_dataframe.csv", type, function(error, data) {
+    x.domain(data.map(function(d) {
+        return d.count;
+    }));
+    y.domain(d3.extent(data, function(d) {
+        return d.sentiment;
+    })).nice();
+
+
+    svg.selectAll(".bar")
+        .data(data)
+        .enter().append("rect")
+        .attr("class", function(d) {
+
+            if (d.sentiment < 0){
+                return "bar negative";
+            } else {
+                return "bar positive";
+            }
+
+        })
+        .attr("data-yr", function(d){
+            return d.count;
+        })
+        .attr("data-c", function(d){
+            return d.sentiment;
+        })
+        .attr("title", function(d){
+            return (d.count + ": " + d.sentiment + " °C")
+        })
+        .attr("y", function(d) {
+
+            if (d.sentiment > 0){
+                return y(d.sentiment);
+            } else {
+                return y(0);
+            }
+
+        })
+        .attr("x", function(d) {
+            return x(d.count);
+        })
+        .attr("width", x.rangeBand())
+        .attr("height", function(d) {
+            return Math.abs(y(d.sentiment) - y(0));
+        })
+        .on("mouseover", function(d){
+ 
+            d3.select("#_yr")
+                .text("Count: " + d.count);
+            d3.select("#degree")
+                .text(d.sentiment);
+        });
+
+    svg.append("g")
+        .attr("class", "y axis")
+        .call(yAxis);
+
+    svg.append("g")
+        .attr("class", "y axis")
+        .append("text")
+        .text("Sentiment")
+        .attr("transform", "translate(15, 40), rotate(-90)")
+
+    svg.append("g")
+        .attr("class", "X axis")
+        .attr("transform", "translate(" + (margin.left - 6.5) + "," + height + ")")
+        .call(xAxis);
+
+    svg.append("g")
+        .attr("class", "x axis")
+        .append("line")
+        .attr("y1", y(0))
+        .attr("y2", y(0))
+        .attr("x2", width);
+
+    svg.append("g")
+        .attr("class", "infowin")
+        .attr("transform", "translate(50, 5)")
+        .append("text")
+        .attr("id", "_yr");
+
+    svg.append("g")
+        .attr("class", "infowin")
+        .attr("transform", "translate(110, 5)")
+        .append("text")
+        .attr("id","degree");
+
+});
+
+
+function type(d) {
+    d.sentiment = +d.sentiment;
+    return d;
+};
+
+
+
+
+        </script>
+
+
+
+
+    </body>
+</html>
+
+
